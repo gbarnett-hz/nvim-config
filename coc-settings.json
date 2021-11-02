@@ -1,0 +1,34 @@
+{
+  "coc.preferences.formatOnSaveFiletypes": [
+    "yaml",
+    "json",
+    "markdown",
+    "pandoc",
+    "xml",
+    "rust",
+    "python",
+    "toml",
+    "go",
+    "typescript",
+    "java"
+  ],
+  "prettier.proseWrap": "always",
+  "codeLens.enable": true,
+  "rust-analyzer.cargo.autoreload": true,
+  "python.formatting.provider": "black",
+  "go.goplsOptions": {
+    "completeUnimported": true
+  },
+  "languageserver": {
+    "dockerfile": {
+      "command": "docker-langserver",
+      "filetypes": ["dockerfile"],
+      "args": ["--stdio"]
+    },
+    "ocaml-lsp": {
+      "command": "opam",
+      "args": ["config", "exec", "--", "ocamllsp"],
+      "filetypes": ["ocaml", "reason"]
+    }
+  }
+}
