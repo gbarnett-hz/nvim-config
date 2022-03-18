@@ -41,14 +41,12 @@ Plug 'morhetz/gruvbox'
 Plug 'preservim/nerdtree'
 Plug 'tpope/vim-fugitive'
 Plug 'liuchengxu/vista.vim'
-Plug 'rust-lang/rust.vim'
 Plug 'cespare/vim-toml'
-Plug 'ocaml/vim-ocaml'
 Plug 'junegunn/limelight.vim'
 Plug 'junegunn/goyo.vim'
-Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
-Plug 'g15ecb/python-syntax'
-Plug 'leafgarland/typescript-vim'
+Plug 'Yggdroot/indentLine'
+Plug 'vim-test/vim-test'
+Plug 'hashivim/vim-terraform'
 call plug#end()
 
 
@@ -65,7 +63,7 @@ nnoremap <Leader>q :q<CR>
 nnoremap <Leader>b :Buffers<CR>
 nnoremap <Leader>a :Ack<Space>-w<Space><cword><CR>
 nnoremap <Leader>m :make<CR>
-nnoremap <Leader>t :NERDTreeFocus<CR>
+nnoremap <Leader>t :TestFile<CR>
 nnoremap <C-j> :wincmd j<CR> 
 nnoremap <C-k> :wincmd k<CR> 
 
@@ -80,7 +78,7 @@ nmap rn <Plug>(coc-rename)
 "nmap <silent>rn <Plug>(coc-rename)
 nmap <silent> so :CocList outline<CR>
 nmap <silent> sl :Vista!!<CR>
-nmap <silent> sp :CocAction<CR>
+nmap <silent> ga :CocAction<CR>
 nmap <silent> gr <Plug>(coc-references)
 nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
@@ -155,13 +153,6 @@ inoremap <nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(
 autocmd! User GoyoEnter Limelight
 autocmd! User GoyoLeave Limelight!
 
-let g:go_highlight_types = 1
-let g:go_highlight_fields = 1
-let g:go_highlight_functions = 1
-let g:go_highlight_function_calls = 1
-let g:go_highlight_operators = 1
-let g:go_highlight_extra_types = 1
-let g:go_highlight_build_constraints = 1
-let g:go_highlight_generate_tags = 1
+let g:indentLine_setConceal=0
 
 colorscheme gruvbox
