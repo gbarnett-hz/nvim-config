@@ -47,6 +47,7 @@ Plug 'junegunn/goyo.vim'
 Plug 'Yggdroot/indentLine'
 Plug 'vim-test/vim-test'
 Plug 'hashivim/vim-terraform'
+Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 call plug#end()
 
 
