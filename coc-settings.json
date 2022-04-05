@@ -17,14 +17,6 @@
       "command": "terraform-ls",
       "args": ["serve"],
       "filetypes": ["terraform", "tf"]
-    },
-    "golang": {
-      "command": "gopls",
-      "rootPatterns": ["go.work", "go.mod", ".vim/", ".git/", ".hg/"],
-      "filetypes": ["go"],
-      "initializationOptions": {
-        "usePlaceholders": true
-      }
     }
   }
 }
