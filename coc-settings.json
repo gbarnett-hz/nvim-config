@@ -7,16 +7,19 @@
     "xml",
     "toml",
     "python",
-    "terraform"
+    "go",
+    "ocaml",
+    "rust"
   ],
   "prettier.proseWrap": "always",
   "codeLens.enable": true,
   "python.formatting.provider": "black",
+  "rust-analyzer.cargo.autoreload": true,
   "languageserver": {
-    "terraform": {
-      "command": "terraform-ls",
-      "args": ["serve"],
-      "filetypes": ["terraform", "tf"]
+    "ocaml-lsp": {
+      "command": "opam",
+      "args": ["config", "exec", "--", "ocamllsp"],
+      "filetypes": ["ocaml"]
     }
   }
 }

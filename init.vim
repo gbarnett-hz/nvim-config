@@ -36,17 +36,11 @@ Plug 'itchyny/lightline.vim'
 Plug 'josa42/vim-lightline-coc'
 Plug 'uarun/vim-protobuf'
 Plug 'vim-pandoc/vim-pandoc-syntax'
-Plug 'junegunn/limelight.vim'
 Plug 'morhetz/gruvbox'
-Plug 'preservim/nerdtree'
 Plug 'tpope/vim-fugitive'
-Plug 'liuchengxu/vista.vim'
 Plug 'cespare/vim-toml'
-Plug 'junegunn/limelight.vim'
-Plug 'junegunn/goyo.vim'
 Plug 'Yggdroot/indentLine'
 Plug 'vim-test/vim-test'
-Plug 'hashivim/vim-terraform'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 call plug#end()
 
@@ -136,11 +130,6 @@ call lightline#coc#register()
 let g:fzf_preview_window = ''
 
 let g:coc_filetype_map = {'pandoc': 'markdown'}
-let g:vista#renderer#enable_icon = 0
-
-let g:vista_default_executive = 'coc'
-let g:vista_sidebar_width=60
-let g:vista_close_on_jump=1
 
 au TextYankPost * lua vim.highlight.on_yank {higroup="IncSearch", timeout=150, on_visual=true}
 
@@ -159,13 +148,13 @@ let g:indentLine_setConceal=0
 lua << EOF
 require'nvim-treesitter.configs'.setup {
   -- One of "all", "maintained" (parsers with maintainers), or a list of languages
-  ensure_installed = "maintained",
+  ensure_installed = "all",
 
   -- Install languages synchronously (only applied to `ensure_installed`)
   sync_install = false,
 
   -- List of parsers to ignore installing
-  ignore_install = { },
+  ignore_install = { "phpdoc" },
 
   highlight = {
     -- `false` will disable the whole extension
