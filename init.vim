@@ -169,7 +169,7 @@ cmp.setup({
 -- mason is for installing lsp servers; the -lspconfig is for playing with lspconfig
 require("mason").setup()
 require("mason-lspconfig").setup({
-  ensure_installed = { "rust_analyzer" }
+  ensure_installed = { "rust_analyzer", "yamlls" }
 })
 
 -- https://github.com/neovim/nvim-lspconfig
@@ -210,6 +210,12 @@ end
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
 -- note: we need to register [capabilities] 
 require'lspconfig'.rust_analyzer.setup{
+  on_attach = on_attach,
+  flags = lsp_flags,
+  capabilites = capabilities
+}
+
+require'lspconfig'.yamlls.setup{
   on_attach = on_attach,
   flags = lsp_flags,
   capabilites = capabilities
