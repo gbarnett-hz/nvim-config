@@ -7,19 +7,14 @@
     "xml",
     "toml",
     "python",
-    "go",
-    "ocaml",
-    "rust"
+    "rust",
+    "go"
   ],
   "prettier.proseWrap": "always",
   "codeLens.enable": true,
   "python.formatting.provider": "black",
   "rust-analyzer.cargo.autoreload": true,
-  "languageserver": {
-    "ocaml-lsp": {
-      "command": "opam",
-      "args": ["config", "exec", "--", "ocamllsp"],
-      "filetypes": ["ocaml"]
-    }
+  "go.goplsOptions": {
+    "completeUnimported": true
   }
 }
