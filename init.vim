@@ -47,8 +47,7 @@ Plug 'hrsh7th/cmp-buffer'
 Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/nvim-cmp'
-Plug 'nvim-lua/plenary.nvim' "dep for null-ls
-Plug 'jose-elias-alvarez/null-ls.nvim' " used for formatting
+Plug 'mhartington/formatter.nvim'
 call plug#end()
 
 
@@ -171,7 +170,7 @@ cmp.setup({
 -- mason is for installing lsp servers; the -lspconfig is for playing with lspconfig
 require("mason").setup()
 require("mason-lspconfig").setup({
-  ensure_installed = { "rust_analyzer", "yamlls" }
+  ensure_installed = { "rust_analyzer", "yamlls", "gopls","pyright" }
 })
 
 -- https://github.com/neovim/nvim-lspconfig
@@ -193,7 +192,7 @@ local on_attach = function(client, bufnr)
   local bufopts = { noremap=true, silent=true, buffer=bufnr }
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
-  vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
+  vim.keymap.set('n', 'H', vim.lsp.buf.hover, bufopts)
   vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
   vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
   vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, bufopts)
@@ -223,38 +222,81 @@ require'lspconfig'.yamlls.setup{
   capabilites = capabilities
 }
 
-local null_ls = require("null-ls")
--- register any number of sources simultaneously
-local sources = {
-    null_ls.builtins.formatting.rustfmt
+require'lspconfig'.pyright.setup{
+  on_attach = on_attach,
+  flags = lsp_flags,
+  capabilites = capabilities
 }
-local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
-local callback = function()
-    vim.lsp.buf.format({
-        bufnr = bufnr,
-        filter = function(client)
-            return client.name == "null-ls"
+
+require'lspconfig'.gopls.setup{
+  on_attach = on_attach,
+  flags = lsp_flags,
+  capabilites = capabilities
+}
+
+-- Utilities for creating configurations
+local util = require "formatter.util"
+
+-- Provides the Format, FormatWrite, FormatLock, and FormatWriteLock commands
+require("formatter").setup {
+  -- Enable or disable logging
+  logging = true,
+  -- Set the log level
+  log_level = vim.log.levels.WARN,
+  -- All formatter configurations are opt-in
+  filetype = {
+    -- Formatter configurations for filetype "lua" go here
+    -- and will be executed in order
+    rust = {
+      function()
+        return {
+          exe = "rustfmt",
+          args = {
+            util.escape_path(util.get_current_buffer_file_path())
+          },
+          stdin = true,
+        }
+      end
+      },
+    lua = {
+      -- "formatter.filetypes.lua" defines default configurations for the
+      -- "lua" filetype
+      require("formatter.filetypes.lua").stylua,
+
+      -- You can also define your own configuration
+      function()
+        -- Supports conditional formatting
+        if util.get_current_buffer_file_name() == "special.lua" then
+          return nil
         end
-    })
-end
-null_ls.setup({ 
-  sources = sources,
-  -- you can reuse a shared lspconfig on_attach callback here
-    on_attach = function(client, bufnr)
-        if client.supports_method("textDocument/formatting") then
-            vim.api.nvim_clear_autocmds({ group = augroup, buffer = bufnr })
-            vim.api.nvim_create_autocmd("BufWritePre", {
-                group = augroup,
-                buffer = bufnr,
-                callback = function()
-                    -- on 0.8, you should use vim.lsp.buf.format({ bufnr = bufnr }) instead
-                    vim.lsp.buf.formatting_sync()
-                end,
-            })
-        end
-    end,
-    callback = callback,
-})
+
+        -- Full specification of configurations is down below and in Vim help
+        -- files
+        return {
+          exe = "stylua",
+          args = {
+            "--search-parent-directories",
+            "--stdin-filepath",
+            util.escape_path(util.get_current_buffer_file_path()),
+            "--",
+            "-",
+          },
+          stdin = true,
+        }
+      end
+    },
+
+    -- Use the special "*" filetype for defining formatter configurations on
+    -- any filetype
+    ["*"] = {
+      -- "formatter.filetypes.any" defines default configurations for any
+      -- filetype
+      require("formatter.filetypes.any").remove_trailing_whitespace
+    }
+  }
+}
+
+
 EOF
 
 colorscheme gruvbox
