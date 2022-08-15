@@ -27,16 +27,12 @@ set colorcolumn=100
 call plug#begin()
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
-Plug 'easymotion/vim-easymotion'
 Plug 'mileszs/ack.vim'
-Plug 'kshenoy/vim-signature' " nice management of marks
 Plug 'inside/vim-search-pulse'
 Plug 'itchyny/lightline.vim'
 Plug 'uarun/vim-protobuf'
 Plug 'vim-pandoc/vim-pandoc-syntax'
 Plug 'morhetz/gruvbox'
-Plug 'tpope/vim-fugitive'
-Plug 'vim-test/vim-test'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 
 Plug 'williamboman/mason.nvim'
@@ -47,7 +43,6 @@ Plug 'hrsh7th/cmp-buffer'
 Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/nvim-cmp'
-Plug 'mhartington/formatter.nvim'
 call plug#end()
 
 
@@ -167,10 +162,12 @@ cmp.setup({
     })
 })
 
--- mason is for installing lsp servers; the -lspconfig is for playing with lspconfig
+-- mason is for installing lsp servers
+-- if you want to install additional lsps then add them on here
+local language_servers = { "rust_analyzer", "yamlls", "gopls","pyright" }
 require("mason").setup()
 require("mason-lspconfig").setup({
-  ensure_installed = { "rust_analyzer", "yamlls", "gopls","pyright" }
+  ensure_installed =  language_servers
 })
 
 -- https://github.com/neovim/nvim-lspconfig
@@ -207,95 +204,16 @@ local on_attach = function(client, bufnr)
   vim.keymap.set('n', '<space>f', vim.lsp.buf.formatting, bufopts)
 end
 
--- this is nvim-cmp piece
+
+-- this is nvim-cmp piece; register capabilites for each of the lsps in [language_servers]
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
--- note: we need to register [capabilities] 
-require'lspconfig'.rust_analyzer.setup{
-  on_attach = on_attach,
-  flags = lsp_flags,
-  capabilites = capabilities
-}
-
-require'lspconfig'.yamlls.setup{
-  on_attach = on_attach,
-  flags = lsp_flags,
-  capabilites = capabilities
-}
-
-require'lspconfig'.pyright.setup{
-  on_attach = on_attach,
-  flags = lsp_flags,
-  capabilites = capabilities
-}
-
-require'lspconfig'.gopls.setup{
-  on_attach = on_attach,
-  flags = lsp_flags,
-  capabilites = capabilities
-}
-
--- Utilities for creating configurations
-local util = require "formatter.util"
-
--- Provides the Format, FormatWrite, FormatLock, and FormatWriteLock commands
-require("formatter").setup {
-  -- Enable or disable logging
-  logging = true,
-  -- Set the log level
-  log_level = vim.log.levels.WARN,
-  -- All formatter configurations are opt-in
-  filetype = {
-    -- Formatter configurations for filetype "lua" go here
-    -- and will be executed in order
-    rust = {
-      function()
-        return {
-          exe = "rustfmt",
-          args = {
-            util.escape_path(util.get_current_buffer_file_path())
-          },
-          stdin = true,
-        }
-      end
-      },
-    lua = {
-      -- "formatter.filetypes.lua" defines default configurations for the
-      -- "lua" filetype
-      require("formatter.filetypes.lua").stylua,
-
-      -- You can also define your own configuration
-      function()
-        -- Supports conditional formatting
-        if util.get_current_buffer_file_name() == "special.lua" then
-          return nil
-        end
-
-        -- Full specification of configurations is down below and in Vim help
-        -- files
-        return {
-          exe = "stylua",
-          args = {
-            "--search-parent-directories",
-            "--stdin-filepath",
-            util.escape_path(util.get_current_buffer_file_path()),
-            "--",
-            "-",
-          },
-          stdin = true,
-        }
-      end
-    },
-
-    -- Use the special "*" filetype for defining formatter configurations on
-    -- any filetype
-    ["*"] = {
-      -- "formatter.filetypes.any" defines default configurations for any
-      -- filetype
-      require("formatter.filetypes.any").remove_trailing_whitespace
-    }
+for _, lsp_svr in ipairs(language_servers) do
+  require('lspconfig')[lsp_svr].setup{
+    on_attach = on_attach,
+    flags = lsp_flags,
+    capabilites = capabilities
   }
-}
-
+end
 
 EOF
 
