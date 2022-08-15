@@ -25,15 +25,17 @@ set colorcolumn=100
 " Plugins
 " =============================================================================
 call plug#begin()
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-Plug 'junegunn/fzf.vim'
-Plug 'mileszs/ack.vim'
 Plug 'inside/vim-search-pulse'
 Plug 'itchyny/lightline.vim'
 Plug 'uarun/vim-protobuf'
 Plug 'vim-pandoc/vim-pandoc-syntax'
 Plug 'morhetz/gruvbox'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+
+" this is a dep for a lot of lua-based nvim stuff -- it's lib for async
+" programming
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim'
 
 Plug 'williamboman/mason.nvim'
 Plug 'williamboman/mason-lspconfig.nvim'
@@ -50,24 +52,13 @@ call plug#end()
 " Key Mappings
 " =============================================================================
 let mapleader = ";"
-nnoremap <Leader>f :FZF<CR>
 nnoremap <Leader>e :e 
 nnoremap <Leader>d :bd<CR>
 nnoremap <Leader>w :w<CR>
 nnoremap <Leader>o :only<CR>
 nnoremap <Leader>q :q<CR>
-nnoremap <Leader>b :Buffers<CR>
-nnoremap <Leader>a :Ack<Space>-w<Space><cword><CR>
-nnoremap <Leader>m :make<CR>
-nnoremap <Leader>t :TestFile<CR>
 nnoremap <C-j> :wincmd j<CR> 
 nnoremap <C-k> :wincmd k<CR> 
-
-nmap <silent> gs :Git<CR>
-nmap <silent> gl :Glog<CR>
-
-nmap <silent> = :cnext<CR>
-nmap <silent> - :cprevious<CR>
 
 " Completion 
 highlight Pmenu ctermfg=15 ctermbg=0 guifg=#000000 guibg=#efefef
@@ -86,13 +77,16 @@ endif
 let g:pandoc#modules#disabled = ["folding"]
 
 
-let g:fzf_preview_window = ''
-
 let g:coc_filetype_map = {'pandoc': 'markdown'}
 
 au TextYankPost * lua vim.highlight.on_yank {higroup="IncSearch", timeout=150, on_visual=true}
 
 let g:indentLine_setConceal=0
+
+nnoremap <leader>f <cmd>lua require('telescope.builtin').find_files()<cr>
+nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
+nnoremap <leader>b <cmd>lua require('telescope.builtin').buffers()<cr>
+nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
 
 lua << EOF
 require'nvim-treesitter.configs'.setup {
