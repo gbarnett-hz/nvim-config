@@ -37,6 +37,7 @@ Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'lewis6991/gitsigns.nvim'
+Plug 'hashivim/vim-terraform'
 
 Plug 'williamboman/mason.nvim'
 Plug 'williamboman/mason-lspconfig.nvim'
@@ -161,7 +162,7 @@ cmp.setup({
 
 -- mason is for installing lsp servers
 -- if you want to install additional lsps then add them on here
-local language_servers = { "rust_analyzer", "yamlls", "gopls","pyright" }
+local language_servers = { "rust_analyzer", "yamlls", "gopls","pyright", "terraform-ls"}
 require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed =  language_servers
@@ -204,8 +205,18 @@ end
 
 -- this is nvim-cmp piece; register capabilites for each of the lsps in [language_servers]
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+-- mason identifies things differently to what https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
+-- does so we have a bit of hackery here
+local mason_to_lsconfig = { }
+mason_to_lsconfig["terraform-ls"] = "terraformls"
 for _, lsp_svr in ipairs(language_servers) do
-  require('lspconfig')[lsp_svr].setup{
+  lspconfig_id = ""
+  if mason_to_lsconfig[lsp_svr] == nil then
+    lspconfig_id = lsp_svr -- no munge
+  else
+    lspconfig_id = mason_to_lsconfig[lsp_svr]
+  end
+  require('lspconfig')[lspconfig_id].setup{
     on_attach = on_attach,
     flags = lsp_flags,
     capabilites = capabilities
