@@ -47,6 +47,7 @@ Plug 'hrsh7th/cmp-buffer'
 Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/nvim-cmp'
+Plug 'vim-test/vim-test'
 call plug#end()
 
 
@@ -60,7 +61,9 @@ nnoremap <Leader>w :w<CR>
 nnoremap <Leader>o :only<CR>
 nnoremap <Leader>q :q<CR>
 nnoremap <C-j> :wincmd j<CR> 
-nnoremap <C-k> :wincmd k<CR> 
+nnoremap <C-k> :wincmd k<CR>
+nnoremap <Leader>t :TestNearest<CR>
+nnoremap <Leader>T :TestFile<CR>
 
 " Completion 
 highlight Pmenu ctermfg=15 ctermbg=0 guifg=#000000 guibg=#efefef
@@ -180,7 +183,7 @@ cmp.setup({
 
 -- mason is for installing lsp servers
 -- if you want to install additional lsps then add them on here
-local language_servers = { "rust_analyzer", "yamlls", "gopls","pyright", "terraform-ls", "ocamllsp"}
+local language_servers = { "rust_analyzer", "yamlls", "gopls","pyright", "terraform-ls", "ocamllsp", "zls"}
 require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed =  language_servers
