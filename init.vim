@@ -36,6 +36,8 @@ Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 " programming
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
+Plug 'nvim-tree/nvim-web-devicons'
+Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' }
 Plug 'lewis6991/gitsigns.nvim'
 Plug 'hashivim/vim-terraform'
 
@@ -273,7 +275,7 @@ end
 
 
 -- this is nvim-cmp piece; register capabilites for each of the lsps in [language_servers]
-local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
 -- mason identifies things differently to what https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
 -- does so we have a bit of hackery here
 local mason_to_lsconfig = { }
