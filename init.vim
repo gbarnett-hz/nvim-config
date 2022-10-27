@@ -51,6 +51,8 @@ Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/nvim-cmp'
 Plug 'vim-test/vim-test'
 Plug 'ray-x/lsp_signature.nvim'
+Plug 'folke/noice.nvim'
+Plug 'MunifTanjim/nui.nvim'
 call plug#end()
 
 
@@ -304,6 +306,8 @@ for _, lsp_svr in ipairs(language_servers) do
     capabilites = capabilities
   }
 end
+
+require("noice").setup()
 
 EOF
 
