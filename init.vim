@@ -98,6 +98,7 @@ nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
 nnoremap <leader>fs <cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>
 nnoremap gr <cmd>lua require('telescope.builtin').lsp_references()<cr>
 nnoremap gw <cmd>lua require('telescope.builtin').lsp_workspace_symbols()<cr>
+nnoremap gs <cmd>lua require('telescope.builtin').git_status()<cr>
 
 lua << EOF
 require('gitsigns').setup()
@@ -120,6 +121,9 @@ require('telescope').setup({
       theme = "dropdown",
     },
     lsp_workspace_symbols = {
+      theme = "dropdown",
+    },
+    git_status = {
       theme = "dropdown",
     },
   }
