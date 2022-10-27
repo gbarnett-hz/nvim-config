@@ -96,6 +96,8 @@ nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
 nnoremap <leader>b <cmd>lua require('telescope.builtin').buffers()<cr>
 nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
 nnoremap <leader>fs <cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>
+nnoremap gr <cmd>lua require('telescope.builtin').lsp_references()<cr>
+nnoremap gw <cmd>lua require('telescope.builtin').lsp_workspace_symbols()<cr>
 
 lua << EOF
 require('gitsigns').setup()
@@ -112,6 +114,12 @@ require('telescope').setup({
       theme = "dropdown",
     },
     lsp_document_symbols = {
+      theme = "dropdown",
+    },
+    lsp_references = {
+      theme = "dropdown",
+    },
+    lsp_workspace_symbols = {
       theme = "dropdown",
     },
   }
@@ -186,7 +194,7 @@ cmp.setup({
 
 -- mason is for installing lsp servers
 -- if you want to install additional lsps then add them on here
-local language_servers = { "rust_analyzer", "yamlls", "pyright", "clangd" }
+local language_servers = { "rust_analyzer", "yamlls", "pyright" }
 require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed =  language_servers
@@ -267,7 +275,6 @@ local on_attach = function(client, bufnr)
   vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, bufopts)
   vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
   vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
-  vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
   vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } end, bufopts)
 
   require "lsp_signature".on_attach(lsp_signature_config, bufnr)
