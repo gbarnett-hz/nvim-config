@@ -53,6 +53,7 @@ Plug 'vim-test/vim-test'
 Plug 'ray-x/lsp_signature.nvim'
 Plug 'folke/noice.nvim'
 Plug 'MunifTanjim/nui.nvim'
+Plug 'rcarriga/nvim-notify'
 call plug#end()
 
 
@@ -200,7 +201,7 @@ cmp.setup({
 
 -- mason is for installing lsp servers
 -- if you want to install additional lsps then add them on here
-local language_servers = { "rust_analyzer", "yamlls", "pyright" }
+local language_servers = { "rust_analyzer", "yamlls", "pyright", "tsserver" }
 require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed =  language_servers
