@@ -50,9 +50,6 @@ Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/nvim-cmp'
 Plug 'vim-test/vim-test'
-Plug 'folke/noice.nvim'
-Plug 'MunifTanjim/nui.nvim'
-Plug 'rcarriga/nvim-notify'
 call plug#end()
 
 
@@ -97,9 +94,8 @@ nnoremap <leader>f <cmd>lua require('telescope.builtin').find_files()<cr>
 nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
 nnoremap <leader>b <cmd>lua require('telescope.builtin').buffers()<cr>
 nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
-nnoremap <leader>fs <cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>
+nnoremap fs <cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>
 nnoremap gr <cmd>lua require('telescope.builtin').lsp_references()<cr>
-nnoremap gw <cmd>lua require('telescope.builtin').lsp_workspace_symbols()<cr>
 nnoremap gs <cmd>lua require('telescope.builtin').git_status()<cr>
 
 lua << EOF
@@ -200,7 +196,7 @@ cmp.setup({
 
 -- mason is for installing lsp servers
 -- if you want to install additional lsps then add them on here
-local language_servers = { "rust_analyzer", "yamlls", "pyright", "tsserver", "jdtls" }
+local language_servers = { "rust_analyzer", "yamlls", "pyright", "jdtls" }
 require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed =  language_servers
@@ -245,7 +241,8 @@ local capabilities = require('cmp_nvim_lsp').default_capabilities()
 -- mason identifies things differently to what https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
 -- does so we have a bit of hackery here
 local mason_to_lsconfig = { }
-mason_to_lsconfig["terraform-ls"] = "terraformls"
+-- sometimes the mason and nvim-lspconfig names differ, below is example how to map the difference
+-- mason_to_lsconfig["terraform-ls"] = "terraformls"
 for _, lsp_svr in ipairs(language_servers) do
   lspconfig_id = ""
   if mason_to_lsconfig[lsp_svr] == nil then
@@ -259,8 +256,6 @@ for _, lsp_svr in ipairs(language_servers) do
     capabilites = capabilities
   }
 end
-
-require("noice").setup()
 
 EOF
 
