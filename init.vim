@@ -27,8 +27,6 @@ set colorcolumn=100
 call plug#begin()
 Plug 'inside/vim-search-pulse'
 Plug 'itchyny/lightline.vim'
-Plug 'uarun/vim-protobuf'
-Plug 'vim-pandoc/vim-pandoc-syntax'
 Plug 'morhetz/gruvbox'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 
@@ -37,10 +35,10 @@ Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-tree/nvim-web-devicons'
+Plug 'projekt0n/circles.nvim'
+Plug 'folke/trouble.nvim'
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' }
 Plug 'lewis6991/gitsigns.nvim'
-Plug 'hashivim/vim-terraform'
-
 Plug 'williamboman/mason.nvim'
 Plug 'williamboman/mason-lspconfig.nvim'
 Plug 'neovim/nvim-lspconfig'
@@ -58,14 +56,14 @@ call plug#end()
 " =============================================================================
 let mapleader = ";"
 nnoremap <Leader>e :e 
+nnoremap <Leader>c :e $HOME/.config/nvim/init.vim<CR>
 nnoremap <Leader>d :bd<CR>
 nnoremap <Leader>w :w<CR>
 nnoremap <Leader>o :only<CR>
 nnoremap <Leader>q :q<CR>
 nnoremap <C-j> :wincmd j<CR> 
 nnoremap <C-k> :wincmd k<CR>
-nnoremap <Leader>t :TestNearest<CR>
-nnoremap <Leader>T :TestFile<CR>
+nnoremap <Leader>t :TestFile<CR>
 
 " Completion 
 highlight Pmenu ctermfg=15 ctermbg=0 guifg=#000000 guibg=#efefef
@@ -94,12 +92,15 @@ nnoremap <leader>f <cmd>lua require('telescope.builtin').find_files()<cr>
 nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
 nnoremap <leader>b <cmd>lua require('telescope.builtin').buffers()<cr>
 nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
-nnoremap fs <cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>
-nnoremap gr <cmd>lua require('telescope.builtin').lsp_references()<cr>
+nnoremap ls <cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>
+nnoremap lr <cmd>lua require('telescope.builtin').lsp_references()<cr>
 nnoremap gs <cmd>lua require('telescope.builtin').git_status()<cr>
 
 lua << EOF
 require('gitsigns').setup()
+require("circles").setup()
+require("trouble").setup {
+  }
 
 require('telescope').setup({
   pickers = {
@@ -196,7 +197,7 @@ cmp.setup({
 
 -- mason is for installing lsp servers
 -- if you want to install additional lsps then add them on here
-local language_servers = { "rust_analyzer", "yamlls", "pyright", "jdtls" }
+local language_servers = { "yamlls", "pyright", "ruff_lsp" }
 require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed =  language_servers
@@ -236,26 +237,23 @@ local on_attach = function(client, bufnr)
 end
 
 
--- this is nvim-cmp piece; register capabilites for each of the lsps in [language_servers]
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
--- mason identifies things differently to what https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
--- does so we have a bit of hackery here
-local mason_to_lsconfig = { }
--- sometimes the mason and nvim-lspconfig names differ, below is example how to map the difference
--- mason_to_lsconfig["terraform-ls"] = "terraformls"
-for _, lsp_svr in ipairs(language_servers) do
-  lspconfig_id = ""
-  if mason_to_lsconfig[lsp_svr] == nil then
-    lspconfig_id = lsp_svr -- no munge
-  else
-    lspconfig_id = mason_to_lsconfig[lsp_svr]
+
+local my_lsp_setup = function(lsp_svrs)
+  for _, lsp_svr in ipairs(lsp_svrs) do
+    require('lspconfig')[lsp_svr].setup{
+      on_attach = on_attach,
+      flags = lsp_flags,
+      capabilites = capabilities
+    }
   end
-  require('lspconfig')[lspconfig_id].setup{
-    on_attach = on_attach,
-    flags = lsp_flags,
-    capabilites = capabilities
-  }
 end
+
+
+-- I find ocamllsp + zls best to install manually, e.g. ocamllsp in opam switch
+local language_servers_manual = { "ocamllsp", "zls" }
+my_lsp_setup(language_servers)
+my_lsp_setup(language_servers_manual)
 
 EOF
 
