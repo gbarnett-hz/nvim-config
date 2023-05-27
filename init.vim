@@ -48,6 +48,7 @@ Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/nvim-cmp'
 Plug 'vim-test/vim-test'
+Plug 'stevearc/dressing.nvim'
 call plug#end()
 
 
@@ -197,7 +198,7 @@ cmp.setup({
 
 -- mason is for installing lsp servers
 -- if you want to install additional lsps then add them on here
-local language_servers = { "yamlls", "pyright", "ruff_lsp" }
+local language_servers = { "yamlls", "jsonls", "rust_analyzer", "jdtls" }
 require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed =  language_servers
