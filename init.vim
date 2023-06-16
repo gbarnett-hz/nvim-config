@@ -37,10 +37,12 @@ Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-tree/nvim-web-devicons'
 Plug 'projekt0n/circles.nvim'
 Plug 'folke/trouble.nvim'
-Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' }
 Plug 'lewis6991/gitsigns.nvim'
 Plug 'williamboman/mason.nvim'
 Plug 'williamboman/mason-lspconfig.nvim'
+Plug 'mfussenegger/nvim-dap'
+Plug 'jay-babu/mason-nvim-dap.nvim'
+Plug 'folke/neodev.nvim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'hrsh7th/cmp-buffer'
@@ -125,7 +127,7 @@ require('telescope').setup({
     },
     git_status = {
       theme = "dropdown",
-    },
+    }
   }
 })
 
@@ -232,8 +234,8 @@ local on_attach = function(client, bufnr)
     print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
   end, bufopts)
   vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, bufopts)
-  vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
-  vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
+  vim.keymap.set('n', '<space>r', vim.lsp.buf.rename, bufopts)
+  vim.keymap.set('n', '<space>a', vim.lsp.buf.code_action, bufopts)
   vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } end, bufopts)
 end
 
@@ -251,10 +253,7 @@ local my_lsp_setup = function(lsp_svrs)
 end
 
 
--- I find ocamllsp + zls best to install manually, e.g. ocamllsp in opam switch
-local language_servers_manual = { "ocamllsp", "zls" }
 my_lsp_setup(language_servers)
-my_lsp_setup(language_servers_manual)
 
 EOF
 
