@@ -35,14 +35,10 @@ Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-tree/nvim-web-devicons'
-Plug 'projekt0n/circles.nvim'
 Plug 'folke/trouble.nvim'
-Plug 'lewis6991/gitsigns.nvim'
 Plug 'williamboman/mason.nvim'
 Plug 'williamboman/mason-lspconfig.nvim'
-Plug 'mfussenegger/nvim-dap'
-Plug 'jay-babu/mason-nvim-dap.nvim'
-Plug 'folke/neodev.nvim'
+Plug 'folke/neodev.nvim' " lua api sig help
 Plug 'neovim/nvim-lspconfig'
 Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'hrsh7th/cmp-buffer'
@@ -51,6 +47,8 @@ Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/nvim-cmp'
 Plug 'vim-test/vim-test'
 Plug 'stevearc/dressing.nvim'
+Plug 'tpope/vim-fugitive'
+Plug 'mhartington/formatter.nvim'
 call plug#end()
 
 
@@ -70,6 +68,8 @@ nnoremap <Leader>t :TestFile<CR>
 
 " Completion 
 highlight Pmenu ctermfg=15 ctermbg=0 guifg=#000000 guibg=#efefef
+highlight MatchParen ctermbg=blue guibg=lightblue
+
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 "set completeopt=noinsert,menuone,noselect
@@ -81,12 +81,6 @@ if executable('ag')
   let g:ackprg = "ag -w --ignore='target*' --ignore='project*' --ignore='*Test*.java' --ignore='*.sql' --ignore='*.htm*' --ignore='*.xml' --vimgrep"
 endif
 
-" Pandoc
-let g:pandoc#modules#disabled = ["folding"]
-
-
-let g:coc_filetype_map = {'pandoc': 'markdown'}
-
 au TextYankPost * lua vim.highlight.on_yank {higroup="IncSearch", timeout=150, on_visual=true}
 
 let g:indentLine_setConceal=0
@@ -94,14 +88,10 @@ let g:indentLine_setConceal=0
 nnoremap <leader>f <cmd>lua require('telescope.builtin').find_files()<cr>
 nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
 nnoremap <leader>b <cmd>lua require('telescope.builtin').buffers()<cr>
-nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
 nnoremap ls <cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>
 nnoremap lr <cmd>lua require('telescope.builtin').lsp_references()<cr>
-nnoremap gs <cmd>lua require('telescope.builtin').git_status()<cr>
 
 lua << EOF
-require('gitsigns').setup()
-require("circles").setup()
 require("trouble").setup {
   }
 
@@ -109,12 +99,14 @@ require('telescope').setup({
   pickers = {
     find_files = {
       theme = "dropdown",
+      previewer = false,
     },
     live_grep = {
       theme = "dropdown",
     },
     buffers = {
       theme = "dropdown",
+      previewer = false,
     },
     lsp_document_symbols = {
       theme = "dropdown",
@@ -124,12 +116,10 @@ require('telescope').setup({
     },
     lsp_workspace_symbols = {
       theme = "dropdown",
-    },
-    git_status = {
-      theme = "dropdown",
     }
   }
 })
+
 
 require'nvim-treesitter.configs'.setup {
   -- One of "all", "maintained" (parsers with maintainers), or a list of languages
@@ -198,9 +188,10 @@ cmp.setup({
     })
 })
 
--- mason is for installing lsp servers
--- if you want to install additional lsps then add them on here
-local language_servers = { "yamlls", "jsonls", "rust_analyzer", "jdtls" }
+-- mason managed
+local language_servers = { "yamlls", "jsonls", "pyright", "terraformls", "zls" }
+-- managed by external provider
+local externally_managed_language_servers = { } 
 require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed =  language_servers
@@ -220,23 +211,13 @@ vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist, opts)
 local on_attach = function(client, bufnr)
   -- Enable completion triggered by <c-x><c-o>
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-  -- Mappings.
-  -- See `:help vim.lsp.*` for documentation on any of the below functions
   local bufopts = { noremap=true, silent=true, buffer=bufnr }
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
   vim.keymap.set('n', 'H', vim.lsp.buf.hover, bufopts)
   vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
-  vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
-  vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, bufopts)
-  vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, bufopts)
-  vim.keymap.set('n', '<space>wl', function()
-    print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-  end, bufopts)
-  vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, bufopts)
   vim.keymap.set('n', '<space>r', vim.lsp.buf.rename, bufopts)
   vim.keymap.set('n', '<space>a', vim.lsp.buf.code_action, bufopts)
-  vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } end, bufopts)
 end
 
 
@@ -254,7 +235,52 @@ end
 
 
 my_lsp_setup(language_servers)
+my_lsp_setup(externally_managed_language_servers)
+
+-- Utilities for creating configurations
+local util = require "formatter.util"
+
+-- Provides the Format, FormatWrite, FormatLock, and FormatWriteLock commands
+require("formatter").setup {
+  -- Enable or disable logging
+  logging = true,
+  -- Set the log level
+  log_level = vim.log.levels.WARN,
+  -- All formatter configurations are opt-in
+  filetype = {
+    markdown = {
+      function()
+        return {
+          exe = "prettier",
+          args = {
+            "--prose-wrap always",
+            "--print-width 100",
+            util.escape_path(util.get_current_buffer_file_path())
+          },
+          stdin = true,
+        }
+      end
+    },
+    python = {
+      require('formatter.filetypes.python').black,
+      require('formatter.filetypes.python').isort,
+    },
+    -- Use the special "*" filetype for defining formatter configurations on
+    -- any filetype
+    ["*"] = {
+      -- "formatter.filetypes.any" defines default configurations for any
+      -- filetype
+      require("formatter.filetypes.any").remove_trailing_whitespace
+    }
+  }
+}
 
 EOF
+
+augroup FormatAutogroup
+  autocmd!
+  autocmd BufWritePost *.md FormatWrite
+  autocmd BufWritePost *.py FormatWrite
+augroup END
 
 colorscheme gruvbox
