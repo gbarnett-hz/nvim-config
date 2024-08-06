@@ -21,6 +21,9 @@ highlight clear SignColumn " make the gutter same colour as lines
 
 set colorcolumn=100
 
+let g:loaded_netrw       = 1
+let g:loaded_netrwPlugin = 1
+
 " =============================================================================
 " Plugins
 " =============================================================================
@@ -48,7 +51,9 @@ Plug 'hrsh7th/nvim-cmp'
 Plug 'vim-test/vim-test'
 Plug 'stevearc/dressing.nvim'
 Plug 'tpope/vim-fugitive'
-Plug 'mhartington/formatter.nvim'
+Plug 'shortcuts/no-neck-pain.nvim', { 'tag': '*' }
+Plug 'nvim-tree/nvim-tree.lua'
+Plug 'hashivim/vim-terraform'
 call plug#end()
 
 
@@ -64,7 +69,7 @@ nnoremap <Leader>o :only<CR>
 nnoremap <Leader>q :q<CR>
 nnoremap <C-j> :wincmd j<CR> 
 nnoremap <C-k> :wincmd k<CR>
-nnoremap <Leader>t :TestFile<CR>
+nnoremap <Leader>t :NvimTreeFocus<CR>
 
 " Completion 
 highlight Pmenu ctermfg=15 ctermbg=0 guifg=#000000 guibg=#efefef
@@ -75,12 +80,6 @@ inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 "set completeopt=noinsert,menuone,noselect
 set completeopt=menu,menuone,noselect
 
-" Ag
-if executable('ag')
-  " w = match whole words
-  let g:ackprg = "ag -w --ignore='target*' --ignore='project*' --ignore='*Test*.java' --ignore='*.sql' --ignore='*.htm*' --ignore='*.xml' --vimgrep"
-endif
-
 au TextYankPost * lua vim.highlight.on_yank {higroup="IncSearch", timeout=150, on_visual=true}
 
 let g:indentLine_setConceal=0
@@ -89,37 +88,78 @@ nnoremap <leader>f <cmd>lua require('telescope.builtin').find_files()<cr>
 nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
 nnoremap <leader>b <cmd>lua require('telescope.builtin').buffers()<cr>
 nnoremap ls <cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>
+nnoremap lw <cmd>lua require('telescope.builtin').lsp_dynamic_workspace_symbols()<cr>
+nnoremap li <cmd>lua require('telescope.builtin').lsp_incoming_calls()<cr>
+nnoremap lo <cmd>lua require('telescope.builtin').lsp_outgoing_calls()<cr>
 nnoremap lr <cmd>lua require('telescope.builtin').lsp_references()<cr>
+nnoremap gd <cmd>lua require('telescope.builtin').lsp_definitions()<cr>
+nnoremap gi <cmd>lua require('telescope.builtin').lsp_implementations()<cr>
+nnoremap gs <cmd>lua require('telescope.builtin').git_status()<cr>
+nnoremap gb <cmd>lua require('telescope.builtin').git_branch()<cr>
+nnoremap gc <cmd>lua require('telescope.builtin').git_commits()<cr>
 
 lua << EOF
 require("trouble").setup {
   }
 
+require("nvim-tree").setup()
+
 require('telescope').setup({
+defaults = {
+  path_display = { "truncate" },
+  },
   pickers = {
     find_files = {
-      theme = "dropdown",
+      theme = "ivy",
       previewer = false,
     },
     live_grep = {
-      theme = "dropdown",
+      theme = "ivy",
     },
     buffers = {
-      theme = "dropdown",
+      theme = "ivy",
       previewer = false,
     },
     lsp_document_symbols = {
-      theme = "dropdown",
+      theme = "ivy",
     },
     lsp_references = {
-      theme = "dropdown",
+      theme = "ivy",
     },
-    lsp_workspace_symbols = {
-      theme = "dropdown",
-    }
+    lsp_dynamic_workspace_symbols = {
+      theme = "ivy",
+    },
+    lsp_definitions = {
+      theme = "ivy",
+    },
+    lsp_implementations = {
+      theme = "ivy",
+    },
+    lsp_incoming_calls = {
+      theme = "ivy",
+    },
+    lsp_outgoing_calls = {
+      theme = "ivy",
+    },
+    git_branch = {
+      theme = "ivy",
+    },
+    git_status = {
+      theme = "ivy",
+    },
+    git_commits = {
+      theme = "ivy",
+    },
   }
 })
 
+require("no-neck-pain").setup({
+ autocmds = {
+        enableOnVimEnter = true,
+ },
+ width = 130,
+ fallbackOnBufferDelete = true
+})
 
 require'nvim-treesitter.configs'.setup {
   -- One of "all", "maintained" (parsers with maintainers), or a list of languages
@@ -189,7 +229,18 @@ cmp.setup({
 })
 
 -- mason managed
-local language_servers = { "yamlls", "jsonls", "pyright", "terraformls", "zls" }
+local language_servers = { 
+  "yamlls", 
+  "jsonls", 
+  "terraformls", 
+  "rust_analyzer", 
+  "dockerls", 
+  "lua_ls", 
+  "clangd", 
+  "zls", 
+  "jdtls",
+  "texlab"
+}
 -- managed by external provider
 local externally_managed_language_servers = { } 
 require("mason").setup()
@@ -213,23 +264,55 @@ local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
   local bufopts = { noremap=true, silent=true, buffer=bufnr }
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
-  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
+  --vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
   vim.keymap.set('n', 'H', vim.lsp.buf.hover, bufopts)
-  vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
+  --vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
   vim.keymap.set('n', '<space>r', vim.lsp.buf.rename, bufopts)
   vim.keymap.set('n', '<space>a', vim.lsp.buf.code_action, bufopts)
+  vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } end, bufopts)
 end
+
+-- auto formatting with lsps that have formatting
+local fmt_tbl = function(extension) 
+return {
+  pattern = extension,
+  group = 'AutoFormatting',
+  callback = function()
+    vim.lsp.buf.format({ })
+  end,
+}
+end
+
+local register_formatters = function(exts)
+  for _, ext in ipairs(exts) do
+    vim.api.nvim_create_autocmd('BufWritePre', fmt_tbl(ext))
+  end
+end
+
+vim.api.nvim_create_augroup('AutoFormatting', {})
+local formatting_exts = { 
+  '*.rs', 
+  '*.py', 
+  --'*.java', 
+  '*.tf', 
+  '*.xml', 
+  '*.mojo',
+  '*.tex'
+}
+register_formatters(formatting_exts)
+--vim.api.nvim_create_autocmd('BufWritePre', fmt_tbl('*.ml'))
+--vim.api.nvim_create_autocmd('BufWritePre', fmt_tbl('*.rs'))
 
 
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 local my_lsp_setup = function(lsp_svrs)
   for _, lsp_svr in ipairs(lsp_svrs) do
-    require('lspconfig')[lsp_svr].setup{
-      on_attach = on_attach,
-      flags = lsp_flags,
-      capabilites = capabilities
-    }
+      require('lspconfig')[lsp_svr].setup{
+        on_attach = on_attach,
+        flags = lsp_flags,
+        capabilites = capabilities
+      }
   end
 end
 
@@ -237,50 +320,6 @@ end
 my_lsp_setup(language_servers)
 my_lsp_setup(externally_managed_language_servers)
 
--- Utilities for creating configurations
-local util = require "formatter.util"
-
--- Provides the Format, FormatWrite, FormatLock, and FormatWriteLock commands
-require("formatter").setup {
-  -- Enable or disable logging
-  logging = true,
-  -- Set the log level
-  log_level = vim.log.levels.WARN,
-  -- All formatter configurations are opt-in
-  filetype = {
-    markdown = {
-      function()
-        return {
-          exe = "prettier",
-          args = {
-            "--prose-wrap always",
-            "--print-width 100",
-            util.escape_path(util.get_current_buffer_file_path())
-          },
-          stdin = true,
-        }
-      end
-    },
-    python = {
-      require('formatter.filetypes.python').black,
-      require('formatter.filetypes.python').isort,
-    },
-    -- Use the special "*" filetype for defining formatter configurations on
-    -- any filetype
-    ["*"] = {
-      -- "formatter.filetypes.any" defines default configurations for any
-      -- filetype
-      require("formatter.filetypes.any").remove_trailing_whitespace
-    }
-  }
-}
-
 EOF
-
-augroup FormatAutogroup
-  autocmd!
-  autocmd BufWritePost *.md FormatWrite
-  autocmd BufWritePost *.py FormatWrite
-augroup END
 
 colorscheme gruvbox
