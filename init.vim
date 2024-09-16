@@ -29,19 +29,19 @@ let g:loaded_netrwPlugin = 1
 " =============================================================================
 call plug#begin()
 Plug 'inside/vim-search-pulse'
-Plug 'itchyny/lightline.vim'
 Plug 'morhetz/gruvbox'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'nvim-lualine/lualine.nvim'
 
 " this is a dep for a lot of lua-based nvim stuff -- it's lib for async
 " programming
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
+Plug 'nvim-telescope/telescope-file-browser.nvim'
 Plug 'nvim-tree/nvim-web-devicons'
 Plug 'folke/trouble.nvim'
 Plug 'williamboman/mason.nvim'
 Plug 'williamboman/mason-lspconfig.nvim'
-Plug 'folke/neodev.nvim' " lua api sig help
 Plug 'neovim/nvim-lspconfig'
 Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'hrsh7th/cmp-buffer'
@@ -54,6 +54,10 @@ Plug 'tpope/vim-fugitive'
 Plug 'shortcuts/no-neck-pain.nvim', { 'tag': '*' }
 Plug 'nvim-tree/nvim-tree.lua'
 Plug 'hashivim/vim-terraform'
+Plug 'arkav/lualine-lsp-progress'
+Plug 'stevearc/overseer.nvim'
+Plug 'b0o/SchemaStore.nvim'
+Plug 'mfussenegger/nvim-dap'
 call plug#end()
 
 
@@ -66,7 +70,9 @@ nnoremap <Leader>c :e $HOME/.config/nvim/init.vim<CR>
 nnoremap <Leader>d :bd<CR>
 nnoremap <Leader>w :w<CR>
 nnoremap <Leader>o :only<CR>
-nnoremap <Leader>q :q<CR>
+nnoremap <Leader>r :OverseerRun<CR>
+nnoremap <Leader>q :OverseerQuickAction<CR>
+"nnoremap <Leader>q :q<CR>
 nnoremap <C-j> :wincmd j<CR> 
 nnoremap <C-k> :wincmd k<CR>
 nnoremap <Leader>t :NvimTreeFocus<CR>
@@ -86,6 +92,7 @@ let g:indentLine_setConceal=0
 
 nnoremap <leader>f <cmd>lua require('telescope.builtin').find_files()<cr>
 nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
+nnoremap <leader>fb :Telescope file_browser path=%:p:h select_buffer=true<cr>
 nnoremap <leader>b <cmd>lua require('telescope.builtin').buffers()<cr>
 nnoremap ls <cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>
 nnoremap lw <cmd>lua require('telescope.builtin').lsp_dynamic_workspace_symbols()<cr>
@@ -99,6 +106,8 @@ nnoremap gb <cmd>lua require('telescope.builtin').git_branch()<cr>
 nnoremap gc <cmd>lua require('telescope.builtin').git_commits()<cr>
 
 lua << EOF
+
+require('overseer').setup()
 require("trouble").setup {
   }
 
@@ -112,6 +121,9 @@ defaults = {
     find_files = {
       theme = "ivy",
       previewer = false,
+    },
+    file_browser = {
+      theme = "ivy",
     },
     live_grep = {
       theme = "ivy",
@@ -157,7 +169,7 @@ require("no-neck-pain").setup({
  autocmds = {
         enableOnVimEnter = true,
  },
- width = 130,
+ width = 110,
  fallbackOnBufferDelete = true
 })
 
@@ -237,9 +249,13 @@ local language_servers = {
   "dockerls", 
   "lua_ls", 
   "clangd", 
-  "zls", 
   "jdtls",
-  "texlab"
+  "texlab",
+  "pyright",
+  "gopls",
+  "ruff_lsp",
+  "ts_ls",
+  "zls"
 }
 -- managed by external provider
 local externally_managed_language_servers = { } 
@@ -293,11 +309,14 @@ vim.api.nvim_create_augroup('AutoFormatting', {})
 local formatting_exts = { 
   '*.rs', 
   '*.py', 
+  '*.go', 
   --'*.java', 
   '*.tf', 
   '*.xml', 
-  '*.mojo',
-  '*.tex'
+  '*.tex',
+  '*.ts',
+  '*.tsx',
+  '*.json'
 }
 register_formatters(formatting_exts)
 --vim.api.nvim_create_autocmd('BufWritePre', fmt_tbl('*.ml'))
@@ -308,18 +327,64 @@ local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 local my_lsp_setup = function(lsp_svrs)
   for _, lsp_svr in ipairs(lsp_svrs) do
+    if lsp_svr == "jsonls"
+    then
+      require('lspconfig')[lsp_svr].setup{
+        on_attach = on_attach,
+        flags = lsp_flags,
+        capabilites = capabilities,
+        settings = {
+          json = {
+            schemas = require('schemastore').json.schemas(),
+            validate = { enable = true },
+          },
+        }
+      }
+    elseif lsp_svr == "yamlls"
+    then
+      require('lspconfig')[lsp_svr].setup{
+        on_attach = on_attach,
+        flags = lsp_flags,
+        capabilites = capabilities,
+        settings = {
+          yaml = {
+            schemaStore = {
+              -- the following are to get SchemaStore working
+              -- You must disable built-in schemaStore support if you want to use
+              -- this plugin and its advanced options like `ignore`.
+              enable = false,
+              -- Avoid TypeError: Cannot read properties of undefined (reading 'length')
+              url = "",
+            },
+            schemas = require('schemastore').yaml.schemas(),
+          },
+        },
+      }
+    else
       require('lspconfig')[lsp_svr].setup{
         on_attach = on_attach,
         flags = lsp_flags,
         capabilites = capabilities
       }
+    end
   end
 end
-
 
 my_lsp_setup(language_servers)
 my_lsp_setup(externally_managed_language_servers)
 
+require('lualine').setup {
+  sections = {
+    lualine_a = {'mode'},
+    lualine_b = {'diff', 'diagnostics', 'lsp_progress'},
+    lualine_c = {'filename'},
+    lualine_x = {'overseer','encoding'},
+    lualine_y = {'progress'},
+    lualine_z = {'location'}
+  }
+}
+
 EOF
+
 
 colorscheme gruvbox
