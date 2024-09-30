@@ -58,6 +58,8 @@ Plug 'arkav/lualine-lsp-progress'
 Plug 'stevearc/overseer.nvim'
 Plug 'b0o/SchemaStore.nvim'
 Plug 'mfussenegger/nvim-dap'
+Plug 'github/copilot.vim'
+Plug 'CopilotC-Nvim/CopilotChat.nvim'
 call plug#end()
 
 
@@ -104,6 +106,9 @@ nnoremap gi <cmd>lua require('telescope.builtin').lsp_implementations()<cr>
 nnoremap gs <cmd>lua require('telescope.builtin').git_status()<cr>
 nnoremap gb <cmd>lua require('telescope.builtin').git_branch()<cr>
 nnoremap gc <cmd>lua require('telescope.builtin').git_commits()<cr>
+"nnoremap cc <cmd>lua require("CopilotChat.integrations.telescope").pick(require("CopilotChat.actions").prompt_actions())<cr>
+nnoremap cc <cmd>:CopilotChatExplain()<cr>
+xnoremap e <cmd>:CopilotChatExplain()<cr>
 
 lua << EOF
 
@@ -384,7 +389,19 @@ require('lualine').setup {
   }
 }
 
+require("CopilotChat").setup {
+  debug = false, -- Enable debugging
+  -- See Configuration section for rest
+  window = {
+    layout = 'float',
+    width = 0.9, -- fractional width of parent, or absolute width in columns when > 1
+    height = 0.9
+  }
+}
+
 EOF
 
+imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
+let g:copilot_no_tab_map = v:true
 
 colorscheme gruvbox
